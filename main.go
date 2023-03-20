@@ -8,7 +8,11 @@ import (
 	"time"
 )
 
-const MINING_DIFFICULTY = 3
+const (
+	MINING_DIFFICULTY = 3
+	MINING_REWARD     = 1
+	MINING_SENDER     = "Persy"
+)
 
 type Block struct {
 	Nonce        int             `json:"nonce"`
@@ -20,6 +24,7 @@ type Block struct {
 type BlockChain struct {
 	transactionPool []*Transactions
 	chain           []*Block
+	addres          string
 }
 
 type Transactions struct {
@@ -39,9 +44,10 @@ func (blockchain *BlockChain) CreateBlock(nonce int, previousHash [32]byte) *Blo
 	return bloco
 }
 
-func NewBlockChain() *BlockChain {
+func NewBlockChain(address string) *BlockChain {
 	var newHash [32]byte
 	blockchain := new(BlockChain)
+	blockchain.addres = address
 	blockchain.CreateBlock(0, newHash)
 	return blockchain
 }
@@ -105,6 +111,30 @@ func (blockchain *BlockChain) ProofOfWork() int {
 	return nonce
 }
 
+func (blockchain *BlockChain) Mining() bool {
+	blockchain.AddTransaction(MINING_SENDER, blockchain.addres, MINING_REWARD)
+	nonce := blockchain.ProofOfWork()
+	previousHash := blockchain.LastBlock().Hash()
+	blockchain.CreateBlock(nonce, previousHash)
+	fmt.Println("Mining Success!")
+	return true
+}
+
+func (blockchain *BlockChain) CalculateTotalAmount(address string) float32 {
+	var total float32
+	for _, bloco := range blockchain.chain {
+		for _, transaction := range bloco.Transactions {
+			if address == transaction.Receiver {
+				total += transaction.Value
+			}
+			if address == transaction.Sender {
+				total -= transaction.Value
+			}
+		}
+	}
+	return total
+}
+
 func (bloco *Block) Print() {
 	fmt.Printf("Timestamp          %d\n", bloco.Timestamp)
 	fmt.Printf("Nonce              %d\n", bloco.Nonce)
@@ -138,19 +168,17 @@ func NewBlock(nonce int, previousHash [32]byte, transactions []*Transactions) *B
 
 func main() {
 	fmt.Println(" ---- Teste Persy Coins -----")
-	blockchain := NewBlockChain()
-	blockchain.Print()
+	blockchain := NewBlockChain("Teste PersyCoins")
 
-	blockchain.AddTransaction("A", "B", 1.5)
-	previousHash := blockchain.LastBlock().Hash()
-	nonce := blockchain.ProofOfWork()
-	blockchain.CreateBlock(nonce, previousHash)
-	blockchain.Print()
+	blockchain.AddTransaction("A", "B", 1)
+	blockchain.Mining()
 
-	blockchain.AddTransaction("B", "C", 2)
-	blockchain.AddTransaction("A", "C", 2)
-	previousHash = blockchain.LastBlock().Hash()
-	nonce = blockchain.ProofOfWork()
-	blockchain.CreateBlock(nonce, previousHash)
-	blockchain.Print()
+	blockchain.AddTransaction("C", "D", 2)
+	blockchain.AddTransaction("X", "Y", 3)
+	blockchain.Mining()
+
+	fmt.Printf("C %.1f\n", blockchain.CalculateTotalAmount("C"))
+	fmt.Printf("D %.1f\n", blockchain.CalculateTotalAmount("D"))
+	fmt.Printf("Minig %.1f\n", blockchain.CalculateTotalAmount("Teste PersyCoins"))
+
 }
