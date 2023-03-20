@@ -142,7 +142,6 @@ func (bloco *Block) Print() {
 	for _, transaction := range bloco.Transactions {
 		transaction.Print()
 	}
-
 }
 
 func (transaction *Transactions) Print() {

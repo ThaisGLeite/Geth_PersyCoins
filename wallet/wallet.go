@@ -5,6 +5,8 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/json"
+	"math/big"
 
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -13,6 +15,19 @@ type Wallet struct {
 	PrivateKey *ecdsa.PrivateKey
 	PublicKey  *ecdsa.PublicKey
 	Address    string
+}
+
+type Transaction struct {
+	SenderPrivateKey *ecdsa.PrivateKey
+	SenderPublicKey  *ecdsa.PublicKey
+	SenderAdress     string
+	ReceiverAddress  string
+	Value            float32
+}
+
+type Signature struct {
+	R *big.Int `json:"receiver_addres"`
+	S *big.Int `json:"sender_addres"`
 }
 
 // São 8 passos para criar a carteira, suas chaves e o seu endereço e o seu endereço
@@ -58,4 +73,22 @@ func NewWallet() *Wallet {
 	carteira.Address = base58.Encode(passo7)
 
 	return carteira
+}
+
+func NewTransaction(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, sender string, receiver string, value float32) *Transaction {
+	return &Transaction{
+		SenderPrivateKey: privateKey,
+		SenderPublicKey:  publicKey,
+		SenderAdress:     sender,
+		ReceiverAddress:  receiver,
+		Value:            value,
+	}
+}
+
+func (transaction *Transaction) GenerateSignature() *Signature {
+	json, _ := json.Marshal(transaction)
+	hash := sha256.Sum256([]byte(json))
+	r, s, _ := ecdsa.Sign(rand.Reader, transaction.SenderPrivateKey, hash[:])
+	//Monta a estrutura da assinatura para retornar
+	return &Signature{r, s}
 }
