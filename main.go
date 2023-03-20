@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const MINING_DIFFICULTY = 3
+
 type Block struct {
 	Nonce        int             `json:"nonce"`
 	PreviousHash [32]byte        `json:"previous_hash"`
@@ -71,6 +73,38 @@ func (blockchain *BlockChain) AddTransaction(sender string, receiver string, val
 	blockchain.transactionPool = append(blockchain.transactionPool, transaction)
 }
 
+func (blockchain *BlockChain) CopyTransactionPool() []*Transactions {
+	transactions := make([]*Transactions, 0)
+	for _, t := range blockchain.transactionPool {
+		novaTransacao := NewTransaction(t.Sender, t.Receiver, t.Value)
+		transactions = append(transactions, novaTransacao)
+	}
+	return transactions
+}
+
+func (blockchain *BlockChain) ValidProof(nonce int, previousHash [32]byte, transactions []*Transactions) bool {
+	zeros := strings.Repeat("0", MINING_DIFFICULTY)
+	guess := NewBlock(nonce, previousHash, transactions)
+	guessHash := fmt.Sprintf("%x", guess.Hash())
+	if guessHash[:MINING_DIFFICULTY] == zeros {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (blockchain *BlockChain) ProofOfWork() int {
+	transactions := blockchain.CopyTransactionPool()
+	previousHash := blockchain.LastBlock().Hash()
+	nonce := 0
+
+	//Vai ficar tentando adivinhar o numero novo até conseguir
+	for !(blockchain.ValidProof(nonce, previousHash, transactions)) {
+		nonce++
+	}
+	return nonce
+}
+
 func (bloco *Block) Print() {
 	fmt.Printf("Timestamp          %d\n", bloco.Timestamp)
 	fmt.Printf("Nonce              %d\n", bloco.Nonce)
@@ -109,12 +143,14 @@ func main() {
 
 	blockchain.AddTransaction("A", "B", 1.5)
 	previousHash := blockchain.LastBlock().Hash()
-	blockchain.CreateBlock(5, previousHash)
+	nonce := blockchain.ProofOfWork()
+	blockchain.CreateBlock(nonce, previousHash)
 	blockchain.Print()
 
 	blockchain.AddTransaction("B", "C", 2)
 	blockchain.AddTransaction("A", "C", 2)
 	previousHash = blockchain.LastBlock().Hash()
-	blockchain.CreateBlock(2, previousHash)
+	nonce = blockchain.ProofOfWork()
+	blockchain.CreateBlock(nonce, previousHash)
 	blockchain.Print()
 }
