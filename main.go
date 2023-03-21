@@ -12,10 +12,10 @@ func main() {
 	carteiraA := wallet.NewWallet()
 	carteiraB := wallet.NewWallet()
 
-	transaction := wallet.NewTransaction(carteiraA.PrivateKey, carteiraA.PublicKey, carteiraA.Address, carteiraB.Address, 1.5)
+	transaction := wallet.NewTransaction(carteiraA.PrivateKey, carteiraA.PublicKey, carteiraA.Address, carteiraB.Address, 1)
 
 	blockchain := block.NewBlockChain(carteiraM.Address)
-	isAdd := blockchain.AddTransaction(carteiraA.Address, carteiraB.Address, 2, carteiraA.PublicKey, transaction.GenerateSignature())
+	isAdd := blockchain.AddTransaction(carteiraA.Address, carteiraB.Address, 1, carteiraA.PublicKey, transaction.GenerateSignature())
 
 	fmt.Println(isAdd)
 }

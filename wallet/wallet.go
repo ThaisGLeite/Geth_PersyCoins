@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/json"
 	"persycoins/utils"
@@ -39,14 +40,14 @@ func NewWallet() *Wallet {
 	passo2 := hash.Sum(nil)
 
 	// 3 - Executar a função de criptografia RIPEMD-160 e fazer o hash do resultado
-	hash = sha256.New()
+	hash = sha1.New()
 	hash.Write(passo2)
 	passo3 := hash.Sum(nil)
 
 	// 4 - Adicionar os bytes 0x00 na frente do hash do passo 3
 	passo4 := make([]byte, 21)
 	passo4[0] = 0x00
-	copy(passo4[1:], passo3)
+	copy(passo4[1:], passo3[:])
 
 	// 5 - Fazer o hash no resultado do passo 4
 	hash = sha256.New()
@@ -61,8 +62,8 @@ func NewWallet() *Wallet {
 	// 7 - Pegar os primeiros 4 bytes do passo 6 para realizar a checksum (verificação da soma dos bits)
 	checksum := passo6[:4]
 	passo7 := make([]byte, 25)
-	copy(passo7[:21], passo4)
-	copy(passo7[21:], checksum)
+	copy(passo7[:21], passo4[:])
+	copy(passo7[21:], checksum[:])
 
 	// 8 - Converter o resultado para uma string de byte q use a base58 e guardar o endereço na carteira
 	carteira.Address = base58.Encode(passo7)
@@ -85,9 +86,8 @@ func (transaction *Transaction) GenerateSignature() *utils.Signature {
 	hash := sha256.Sum256([]byte(json))
 	r, s, _ := ecdsa.Sign(rand.Reader, transaction.SenderPrivateKey, hash[:])
 	//Monta a estrutura da assinatura para retornar
-	assinatura := &utils.Signature{
+	return &utils.Signature{
 		R: r,
 		S: s,
 	}
-	return assinatura
 }
