@@ -84,12 +84,20 @@ func (blockchain *BlockChain) Print() {
 	fmt.Printf("%s\n", strings.Repeat("*", 60))
 }
 
-func (blockchain *BlockChain) AddTransaction(sender string, receiver string, value float32, senderKey *ecdsa.PublicKey, assinatura *utils.Signature) {
+func (blockchain *BlockChain) AddTransaction(sender string, receiver string, value float32,
+	senderKey *ecdsa.PublicKey, assinatura *utils.Signature) bool {
 	transaction := NewTransaction(sender, receiver, value)
+
+	if sender == MINING_SENDER {
+		blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+		return true
+	}
 
 	if blockchain.VerifyTransaction(senderKey, assinatura, transaction) {
 		blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+		return true
 	}
+	return false
 }
 
 func (blockchain *BlockChain) CopyTransactionPool() []*Transactions {
@@ -125,7 +133,7 @@ func (blockchain *BlockChain) ProofOfWork() int {
 }
 
 func (blockchain *BlockChain) Mining() bool {
-	blockchain.AddTransaction(MINING_SENDER, blockchain.addres, MINING_REWARD)
+	blockchain.AddTransaction(MINING_SENDER, blockchain.addres, MINING_REWARD, nil, nil)
 	nonce := blockchain.ProofOfWork()
 	previousHash := blockchain.LastBlock().Hash()
 	blockchain.CreateBlock(nonce, previousHash)
