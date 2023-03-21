@@ -1,9 +1,11 @@
 package block
 
 import (
+	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"persycoins/utils"
 	"strings"
 	"time"
 )
@@ -61,6 +63,14 @@ func NewTransaction(sender string, receiver string, value float32) *Transactions
 	return &transaction
 }
 
+func (blockchain *BlockChain) VerifyTransaction(senderKey *ecdsa.PublicKey, assinatura *utils.Signature, transaction *Transactions) bool {
+	transactionJ, _ := json.Marshal(transaction)
+	transactionH := sha256.Sum256([]byte(transactionJ))
+
+	//Verificar a chave para retornar o resultado bool se a assinatura é verdadeira
+	return ecdsa.Verify(senderKey, transactionH[:], assinatura.R, assinatura.S)
+}
+
 func (blockchain *BlockChain) LastBlock() *Block {
 	ultimo := len(blockchain.chain) - 1
 	return blockchain.chain[ultimo]
@@ -74,9 +84,12 @@ func (blockchain *BlockChain) Print() {
 	fmt.Printf("%s\n", strings.Repeat("*", 60))
 }
 
-func (blockchain *BlockChain) AddTransaction(sender string, receiver string, value float32) {
+func (blockchain *BlockChain) AddTransaction(sender string, receiver string, value float32, senderKey *ecdsa.PublicKey, assinatura *utils.Signature) {
 	transaction := NewTransaction(sender, receiver, value)
-	blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+
+	if blockchain.VerifyTransaction(senderKey, assinatura, transaction) {
+		blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+	}
 }
 
 func (blockchain *BlockChain) CopyTransactionPool() []*Transactions {

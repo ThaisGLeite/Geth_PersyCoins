@@ -6,7 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
-	"math/big"
+	"persycoins/utils"
 
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -23,11 +23,6 @@ type Transaction struct {
 	SenderAdress     string
 	ReceiverAddress  string
 	Value            float32
-}
-
-type Signature struct {
-	R *big.Int `json:"receiver_addres"`
-	S *big.Int `json:"sender_addres"`
 }
 
 // São 8 passos para criar a carteira, suas chaves e o seu endereço e o seu endereço
@@ -85,10 +80,14 @@ func NewTransaction(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, se
 	}
 }
 
-func (transaction *Transaction) GenerateSignature() *Signature {
+func (transaction *Transaction) GenerateSignature() *utils.Signature {
 	json, _ := json.Marshal(transaction)
 	hash := sha256.Sum256([]byte(json))
 	r, s, _ := ecdsa.Sign(rand.Reader, transaction.SenderPrivateKey, hash[:])
 	//Monta a estrutura da assinatura para retornar
-	return &Signature{r, s}
+	assinatura := &utils.Signature{
+		R: r,
+		S: s,
+	}
+	return assinatura
 }
