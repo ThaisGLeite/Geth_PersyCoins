@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"persycoins/utils"
+	"persycoins/wallet"
 	"strings"
 	"time"
 )
@@ -77,26 +77,33 @@ func (blockchain *BlockChain) Print() {
 	fmt.Printf("%s\n", strings.Repeat("*", 60))
 }
 
-func (blockchain *BlockChain) VerifyTransaction(senderKey *ecdsa.PublicKey, assinatura *utils.Signature, transaction *Transactions) bool {
+func (blockchain *BlockChain) VerifyTransaction(senderKey *ecdsa.PublicKey, transaction *wallet.Transaction) bool {
 	transactionJ, _ := json.Marshal(transaction)
 	transactionH := sha256.Sum256([]byte(transactionJ))
-
+	assinatura := transaction.GenerateSignature()
 	//Verificar a chave para retornar o resultado bool se a assinatura é verdadeira
 	return ecdsa.Verify(senderKey, transactionH[:], assinatura.R, assinatura.S)
 }
 
-func (blockchain *BlockChain) AddTransaction(sender string, receiver string, value float32,
-	senderKey *ecdsa.PublicKey, assinatura *utils.Signature) bool {
+func (blockchain *BlockChain) AddTransaction(transaction *wallet.Transaction, senderKey *ecdsa.PublicKey) bool {
 
-	transaction := NewTransaction(sender, receiver, value)
-
-	if sender == MINING_SENDER {
-		blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+	if transaction.SenderAdress == MINING_SENDER {
+		tempTransaction := &Transactions{
+			Sender:   transaction.SenderAdress,
+			Receiver: transaction.ReceiverAddress,
+			Value:    transaction.Value,
+		}
+		blockchain.transactionPool = append(blockchain.transactionPool, tempTransaction)
 		return true
 	}
 
-	if blockchain.VerifyTransaction(senderKey, assinatura, transaction) {
-		blockchain.transactionPool = append(blockchain.transactionPool, transaction)
+	if blockchain.VerifyTransaction(senderKey, transaction) {
+		tempTransaction := &Transactions{
+			Sender:   transaction.SenderAdress,
+			Receiver: transaction.ReceiverAddress,
+			Value:    transaction.Value,
+		}
+		blockchain.transactionPool = append(blockchain.transactionPool, tempTransaction)
 		return true
 	} else {
 		log.Println("Erro ao verificar a assinatura da transação")
@@ -137,7 +144,14 @@ func (blockchain *BlockChain) ProofOfWork() int {
 }
 
 func (blockchain *BlockChain) Mining() bool {
-	blockchain.AddTransaction(MINING_SENDER, blockchain.addres, MINING_REWARD, nil, nil)
+	/**
+	tempTransaction := &Transactions{
+		Sender:   MINING_SENDER,
+		Receiver: blockchain.addres,
+		Value:    1,
+	}
+	blockchain.AddTransaction(tempTransaction, MINING_SENDER)
+	*/
 	nonce := blockchain.ProofOfWork()
 	previousHash := blockchain.LastBlock().Hash()
 	blockchain.CreateBlock(nonce, previousHash)

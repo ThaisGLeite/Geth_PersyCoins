@@ -13,9 +13,9 @@ func main() {
 	carteiraB := wallet.NewWallet()
 
 	transaction := wallet.NewTransaction(carteiraA.PrivateKey, carteiraA.PublicKey, carteiraA.Address, carteiraB.Address, 1)
-
+	fmt.Printf("Essa é a assinatura da transação q ta no main: %s\n", transaction.GenerateSignature())
 	blockchain := block.NewBlockChain(carteiraM.Address)
-	isAdd := blockchain.AddTransaction(carteiraA.Address, carteiraB.Address, 1, carteiraA.PublicKey, transaction.GenerateSignature())
+	isAdd := blockchain.AddTransaction(transaction, carteiraA.PublicKey)
 
 	fmt.Println(isAdd)
 }
