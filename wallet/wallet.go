@@ -39,7 +39,7 @@ func NewWallet() *Wallet {
 	hash.Write(carteira.PublicKey.Y.Bytes())
 	passo2 := hash.Sum(nil)
 
-	// 3 - Executar a função de criptografia RIPEMD-160 e fazer o hash do resultado
+	// 3 - Executar a função de criptografia SHA1 pq ela só tem 20 bytes e fazer o hash do resultado
 	hash = sha1.New()
 	hash.Write(passo2)
 	passo3 := hash.Sum(nil)

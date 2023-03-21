@@ -143,15 +143,15 @@ func (blockchain *BlockChain) ProofOfWork() int {
 	return nonce
 }
 
-func (blockchain *BlockChain) Mining() bool {
-	/**
-	tempTransaction := &Transactions{
-		Sender:   MINING_SENDER,
-		Receiver: blockchain.addres,
-		Value:    1,
+func (blockchain *BlockChain) Mining(minerKey *ecdsa.PublicKey) bool {
+
+	//TODO arrumar esse Mining pq ele num ta servido de nada, mas o add transaction
+	//  teve q ser mudado do original pq a chave validava errado
+	tempTransaction := &wallet.Transaction{
+		SenderPublicKey: minerKey,
+		Value:           1,
 	}
-	blockchain.AddTransaction(tempTransaction, MINING_SENDER)
-	*/
+	blockchain.AddTransaction(tempTransaction, minerKey)
 	nonce := blockchain.ProofOfWork()
 	previousHash := blockchain.LastBlock().Hash()
 	blockchain.CreateBlock(nonce, previousHash)
