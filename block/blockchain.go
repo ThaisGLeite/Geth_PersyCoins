@@ -78,6 +78,7 @@ func (blockchain *BlockChain) Print() {
 }
 
 func (blockchain *BlockChain) VerifyTransaction(senderKey *ecdsa.PublicKey, transaction *wallet.Transaction) bool {
+	fmt.Println(senderKey)
 	transactionJ, _ := json.Marshal(transaction)
 	transactionH := sha256.Sum256([]byte(transactionJ))
 	assinatura := transaction.GenerateSignature()
@@ -107,8 +108,8 @@ func (blockchain *BlockChain) AddTransaction(transaction *wallet.Transaction, se
 		return true
 	} else {
 		log.Println("Erro ao verificar a assinatura da transação")
+		return false
 	}
-	return false
 }
 
 func (blockchain *BlockChain) CopyTransactionPool() []*Transactions {
