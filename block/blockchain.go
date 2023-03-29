@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"persycoins/utils"
 	"persycoins/wallet"
 	"strings"
 	"time"
@@ -77,16 +78,16 @@ func (blockchain *BlockChain) Print() {
 	fmt.Printf("%s\n", strings.Repeat("*", 60))
 }
 
-func (blockchain *BlockChain) VerifyTransaction(senderKey *ecdsa.PublicKey, transaction *wallet.Transaction) bool {
-	fmt.Println(senderKey)
-	transactionJ, _ := json.Marshal(transaction)
+func (blockchain *BlockChain) VerifyTransaction(senderKey *ecdsa.PublicKey, transaction *wallet.Transaction, logs utils.GoAppTools) bool {
+	transactionJ, err := json.Marshal(transaction)
+	utils.Check(err, logs)
 	transactionH := sha256.Sum256([]byte(transactionJ))
 	assinatura := transaction.GenerateSignature()
-	//Verificar a chave para retornar o resultado bool se a assinatura é verdadeira
+	// Verificar a chave para retornar o resultado bool se a assinatura é verdadeira
 	return ecdsa.Verify(senderKey, transactionH[:], assinatura.R, assinatura.S)
 }
 
-func (blockchain *BlockChain) AddTransaction(transaction *wallet.Transaction, senderKey *ecdsa.PublicKey) bool {
+func (blockchain *BlockChain) AddTransaction(transaction *wallet.Transaction, senderKey *ecdsa.PublicKey, logs utils.GoAppTools) bool {
 
 	if transaction.SenderAdress == MINING_SENDER {
 		tempTransaction := &Transactions{
@@ -98,7 +99,7 @@ func (blockchain *BlockChain) AddTransaction(transaction *wallet.Transaction, se
 		return true
 	}
 
-	if blockchain.VerifyTransaction(senderKey, transaction) {
+	if blockchain.VerifyTransaction(senderKey, transaction, logs) {
 		tempTransaction := &Transactions{
 			Sender:   transaction.SenderAdress,
 			Receiver: transaction.ReceiverAddress,
@@ -144,7 +145,7 @@ func (blockchain *BlockChain) ProofOfWork() int {
 	return nonce
 }
 
-func (blockchain *BlockChain) Mining(minerKey *ecdsa.PublicKey) bool {
+func (blockchain *BlockChain) Mining(minerKey *ecdsa.PublicKey, logs utils.GoAppTools) bool {
 
 	//TODO arrumar esse Mining pq ele num ta servido de nada, mas o add transaction
 	//  teve q ser mudado do original pq a chave validava errado
@@ -152,7 +153,7 @@ func (blockchain *BlockChain) Mining(minerKey *ecdsa.PublicKey) bool {
 		SenderPublicKey: minerKey,
 		Value:           1,
 	}
-	blockchain.AddTransaction(tempTransaction, minerKey)
+	blockchain.AddTransaction(tempTransaction, minerKey, logs)
 	nonce := blockchain.ProofOfWork()
 	previousHash := blockchain.LastBlock().Hash()
 	blockchain.CreateBlock(nonce, previousHash)
