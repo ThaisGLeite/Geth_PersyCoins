@@ -32,10 +32,10 @@ func main() {
 	transaction = wallet.NewTransaction(carteiraB.PrivateKey, carteiraB.PublicKey, carteiraB.Address, carteiraA.Address, 2)
 	blockchain.AddTransaction(transaction, carteiraB.PublicKey, logs)
 
-	blockchain.Mining(carteiraM.PublicKey, logs)
+	blockchain.Mining(carteiraM.PublicKey, carteiraM.PrivateKey, logs)
 	blockchain.Print()
 
 	fmt.Printf("A: %.1f\n", blockchain.CalculateTotalAmount(carteiraA.Address))
-	fmt.Printf("A: %.1f\n", blockchain.CalculateTotalAmount(carteiraB.Address))
-	fmt.Printf("A: %.1f\n", blockchain.CalculateTotalAmount(carteiraM.Address))
+	fmt.Printf("B: %.1f\n", blockchain.CalculateTotalAmount(carteiraB.Address))
+	fmt.Printf("M: %.1f\n", blockchain.CalculateTotalAmount(carteiraM.Address))
 }

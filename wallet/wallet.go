@@ -81,10 +81,13 @@ func NewTransaction(privateKey *ecdsa.PrivateKey, publicKey *ecdsa.PublicKey, se
 	}
 }
 
-func (transaction *Transaction) GenerateSignature() *utils.Signature {
-	json, _ := json.Marshal(transaction)
+func (transaction *Transaction) GenerateSignature(logs utils.GoAppTools) *utils.Signature {
+	json, err := json.Marshal(transaction)
+	utils.Check(err, logs)
 	hash := sha256.Sum256([]byte(json))
-	r, s, _ := ecdsa.Sign(rand.Reader, transaction.SenderPrivateKey, hash[:])
+	r, s, err := ecdsa.Sign(rand.Reader, transaction.SenderPrivateKey, hash[:])
+	utils.Check(err, logs)
+
 	//Monta a estrutura da assinatura para retornar
 	return &utils.Signature{
 		R: r,

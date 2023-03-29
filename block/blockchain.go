@@ -82,7 +82,7 @@ func (blockchain *BlockChain) VerifyTransaction(senderKey *ecdsa.PublicKey, tran
 	transactionJ, err := json.Marshal(transaction)
 	utils.Check(err, logs)
 	transactionH := sha256.Sum256([]byte(transactionJ))
-	assinatura := transaction.GenerateSignature()
+	assinatura := transaction.GenerateSignature(logs)
 	// Verificar a chave para retornar o resultado bool se a assinatura é verdadeira
 	return ecdsa.Verify(senderKey, transactionH[:], assinatura.R, assinatura.S)
 }
@@ -145,15 +145,16 @@ func (blockchain *BlockChain) ProofOfWork() int {
 	return nonce
 }
 
-func (blockchain *BlockChain) Mining(minerKey *ecdsa.PublicKey, logs utils.GoAppTools) bool {
+func (blockchain *BlockChain) Mining(minerPublicKey *ecdsa.PublicKey, minerPrivateKey *ecdsa.PrivateKey, logs utils.GoAppTools) bool {
 
 	//TODO arrumar esse Mining pq ele num ta servido de nada, mas o add transaction
 	//  teve q ser mudado do original pq a chave validava errado
 	tempTransaction := &wallet.Transaction{
-		SenderPublicKey: minerKey,
-		Value:           1,
+		SenderPublicKey:  minerPublicKey,
+		SenderPrivateKey: minerPrivateKey,
+		Value:            1,
 	}
-	blockchain.AddTransaction(tempTransaction, minerKey, logs)
+	blockchain.AddTransaction(tempTransaction, minerPublicKey, logs)
 	nonce := blockchain.ProofOfWork()
 	previousHash := blockchain.LastBlock().Hash()
 	blockchain.CreateBlock(nonce, previousHash)
